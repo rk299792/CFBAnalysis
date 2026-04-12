@@ -19,6 +19,28 @@ OUTPUT_FILE = Path("output/sec_winpct_heatmap.png")
 START_YEAR = 1950
 END_YEAR = 2024
 
+# Year each university first admitted Black students to the main campus.
+# Sources: university archives, Wikipedia, civil rights historical records.
+# Schools marked with * desegregated before START_YEAR; shown at the left edge.
+DESEG_YEARS = {
+    "Alabama":          1963,  # Vivian Malone & James Hood, June 11 1963
+    "Arkansas":         1948,  # Silas Hunt, Law School, Feb 2 1948  *
+    "Auburn":           1964,  # Harold A. Franklin, Jan 4 1964
+    "Florida":          1962,  # Seven Black undergraduates, Fall 1962
+    "Georgia":          1961,  # Charlayne Hunter & Hamilton Holmes, Jan 9 1961
+    "Kentucky":         1949,  # Lyman T. Johnson, graduate school 1949  *
+    "LSU":              1964,  # First Black undergraduates, Fall 1964
+    "Mississippi State":1965,  # Richard E. Holmes, July 1965
+    "Missouri":         1950,  # Gus T. Ridgel & others, 1950
+    "Ole Miss":         1962,  # James Meredith, Oct 1 1962
+    "South Carolina":   1963,  # Monteith, Anderson & Solomon, Sep 11 1963
+    "Tennessee":        1961,  # Robinson, Blair & Gillespie, Jan 4 1961
+    "Texas A&M":        1963,  # Leroy Sterling & others, Summer 1963
+    "Vanderbilt":       1964,  # Eight students incl. Dianne White Bernstein, Fall 1964
+    "Texas":            1950,  # Heman Marion Sweatt, Law School, Fall 1950
+    "Oklahoma":         1949,  # Ada Lois Sipuel Fisher, Law School 1949  *
+}
+
 
 def fetch_sec_records() -> pd.DataFrame:
     """
@@ -120,9 +142,48 @@ def create_heatmap(df: pd.DataFrame) -> None:
     )
 
     ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=10)
+
+    # --- Desegregation markers ---
+    teams_ordered = pivot.index.tolist()
+    years_ordered = pivot.columns.tolist()
+
+    marker_x, marker_y = [], []        # deseg year falls within chart range
+    pre_chart_x, pre_chart_y = [], []  # deseg year is before START_YEAR
+
+    for team, deseg_year in DESEG_YEARS.items():
+        if team not in teams_ordered:
+            continue
+        row_idx = teams_ordered.index(team)
+        y = row_idx + 0.5
+        if deseg_year < START_YEAR:
+            pre_chart_x.append(0.25)   # pinned just inside left edge
+            pre_chart_y.append(y)
+        elif deseg_year in years_ordered:
+            col_idx = years_ordered.index(deseg_year)
+            marker_x.append(col_idx + 0.5)
+            marker_y.append(y)
+
+    if marker_x:
+        ax.scatter(
+            marker_x, marker_y,
+            marker="v", s=70,
+            color="steelblue", edgecolors="white", linewidths=0.8,
+            zorder=5, label="University desegregated",
+        )
+    if pre_chart_x:
+        ax.scatter(
+            pre_chart_x, pre_chart_y,
+            marker="v", s=70,
+            facecolors="none", edgecolors="steelblue", linewidths=1.4,
+            zorder=5, label=f"Desegregated before {START_YEAR} (pinned to left edge)",
+        )
+
+    ax.legend(loc="lower right", fontsize=9, framealpha=0.85)
+    # ---
+
     ax.set_title(
         f"SEC Team Win Percentage by Season ({START_YEAR}–{END_YEAR})\n"
-        "Sorted by average SEC win %  |  Grey = not in SEC that season",
+        "Sorted by average SEC win %  |  Grey = not in SEC  |  ▼ = university desegregated",
         fontsize=14,
         pad=14,
     )
