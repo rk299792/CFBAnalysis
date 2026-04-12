@@ -7,8 +7,8 @@ from pathlib import Path
 CACHE_FILE = Path("data/sec_records.csv")
 OUTPUT_FILE = Path("output/sec_correlation_heatmap.png")
 
-# Pairs with fewer shared SEC seasons than this are shown as NaN
-MIN_OVERLAP_YEARS = 10
+START_YEAR = 1950
+END_YEAR   = 2024
 
 
 def load_data() -> pd.DataFrame:
@@ -22,25 +22,34 @@ def load_data() -> pd.DataFrame:
 def compute_correlation(df: pd.DataFrame):
     """
     Spearman rank correlation of win% between every pair of SEC teams,
-    computed only over the seasons both teams were in the SEC.
-    Pairs with fewer than MIN_OVERLAP_YEARS shared seasons are masked.
+    restricted to teams that have been continuous SEC members from
+    START_YEAR through END_YEAR (no gaps, no mid-period joiners/leavers).
     """
-    # Pivot so rows = seasons, columns = teams
     pivot = df.pivot(index="year", columns="team", values="win_pct")
 
+    all_years = set(range(START_YEAR, END_YEAR + 1))
+    total_seasons = len(all_years)
+
+    # Keep only teams present in every season from START_YEAR to END_YEAR
+    continuous = [
+        team for team in pivot.columns
+        if pivot[team].notna().sum() == total_seasons
+        and pivot[team].first_valid_index() == START_YEAR
+        and pivot[team].last_valid_index()  == END_YEAR
+    ]
+    continuous.sort()
+    print(f"Continuous SEC members ({START_YEAR}–{END_YEAR}): {', '.join(continuous)}")
+
+    pivot = pivot[continuous]
+
     # Spearman is more robust than Pearson for bounded, non-normal win%
-    corr = pivot.corr(method="spearman", min_periods=MIN_OVERLAP_YEARS)
+    corr = pivot.corr(method="spearman")
 
-    # Count shared seasons for each pair (for the subtitle annotation)
-    overlap = pivot.notna().T.dot(pivot.notna()).astype(int)
-
-    return corr, overlap
+    return corr, continuous
 
 
-def create_heatmap(corr: pd.DataFrame, overlap: pd.DataFrame) -> None:
-    teams = sorted(corr.columns)
+def create_heatmap(corr: pd.DataFrame, teams: list) -> None:
     corr = corr.loc[teams, teams]
-    overlap = overlap.loc[teams, teams]
 
     # Mask the upper triangle (matrix is symmetric)
     mask = np.triu(np.ones_like(corr, dtype=bool), k=1)
@@ -64,9 +73,8 @@ def create_heatmap(corr: pd.DataFrame, overlap: pd.DataFrame) -> None:
     )
 
     ax.set_title(
-        "SEC Team Win% Correlation (Spearman rank)\n"
-        f"Red = tend to be good/bad together  |  Blue = inverse (one up, other down)"
-        f"  |  Min. {MIN_OVERLAP_YEARS} shared SEC seasons required",
+        f"SEC Team Win% Correlation (Spearman rank)  |  {START_YEAR}–{END_YEAR}\n"
+        "Continuous members only  |  Red = tend to rise/fall together  |  Blue = inverse",
         fontsize=12,
         pad=14,
     )
@@ -74,19 +82,6 @@ def create_heatmap(corr: pd.DataFrame, overlap: pd.DataFrame) -> None:
     ax.set_ylabel("")
     ax.tick_params(axis="x", rotation=45, labelsize=9)
     ax.tick_params(axis="y", rotation=0, labelsize=9)
-
-    # Footnote listing teams with limited overlap
-    limited = [
-        f"{t} ({int(overlap.loc[t].drop(t).min())} yrs min)"
-        for t in teams
-        if overlap.loc[t].drop(t).min() < 30
-    ]
-    if limited:
-        fig.text(
-            0.01, 0.01,
-            "Limited overlap (<30 shared seasons): " + ", ".join(limited),
-            fontsize=7, color="#555555",
-        )
 
     plt.tight_layout()
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -97,5 +92,5 @@ def create_heatmap(corr: pd.DataFrame, overlap: pd.DataFrame) -> None:
 
 if __name__ == "__main__":
     df = load_data()
-    corr, overlap = compute_correlation(df)
-    create_heatmap(corr, overlap)
+    corr, continuous = compute_correlation(df)
+    create_heatmap(corr, continuous)

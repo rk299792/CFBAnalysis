@@ -37,9 +37,11 @@ university first admitted Black students.
 **Script:** `sec_correlation.py`
 **Output:** `output/sec_correlation_heatmap.png`
 
-Computes Spearman rank correlations of win% between every pair of SEC teams, using
-only the seasons both teams were active in the conference. Pairs with fewer than
-10 shared seasons are masked. Red = tend to be good/bad in the same years;
+Computes Spearman rank correlations of win% between every pair of SEC teams,
+restricted to the **10 programs that have been continuous members since 1950**:
+Alabama, Auburn, Florida, Georgia, Kentucky, LSU, Mississippi State, Ole Miss,
+Tennessee, and Vanderbilt. This ensures every correlation is computed over the
+full 75-year period on equal footing. Red = tend to be good/bad in the same years;
 Blue = inverse relationship (one up, the other down).
 
 #### Key Findings
