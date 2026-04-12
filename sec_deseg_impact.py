@@ -16,6 +16,7 @@ from pathlib import Path
 
 CACHE_FILE = Path("data/sec_records.csv")
 OUTPUT_FILE = Path("output/sec_deseg_impact.png")
+END_YEAR = 2025
 WINDOW = 10       # years before/after to compare
 MIN_SEASONS = 5   # minimum seasons required in each window to include a team
 

@@ -17,7 +17,7 @@ CACHE_FILE = Path("data/sec_records.csv")
 OUTPUT_FILE = Path("output/sec_winpct_heatmap.png")
 
 START_YEAR = 1950
-END_YEAR = 2024
+END_YEAR = 2025
 
 # Year each university first admitted Black students to the main campus.
 # Sources: university archives, Wikipedia, civil rights historical records.
@@ -50,10 +50,12 @@ def fetch_sec_records() -> pd.DataFrame:
     REQUIRED_COLUMNS = {"year", "team", "wins", "losses", "ties", "games", "win_pct"}
     if CACHE_FILE.exists():
         cached = pd.read_csv(CACHE_FILE)
-        if REQUIRED_COLUMNS.issubset(cached.columns):
+        if (REQUIRED_COLUMNS.issubset(cached.columns)
+                and cached["year"].max() >= END_YEAR
+                and cached["year"].min() <= START_YEAR):
             print(f"Loading cached data from {CACHE_FILE}")
             return cached
-        print("Stale cache detected (missing columns) — re-fetching...")
+        print("Stale cache detected (outdated year range or missing columns) — re-fetching...")
         CACHE_FILE.unlink()
 
     if not API_KEY or API_KEY == "your_api_key_here":

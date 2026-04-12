@@ -8,7 +8,7 @@ CACHE_FILE = Path("data/sec_records.csv")
 OUTPUT_FILE = Path("output/sec_correlation_heatmap.png")
 
 START_YEAR = 1950
-END_YEAR   = 2024
+END_YEAR   = 2025
 
 
 def load_data() -> pd.DataFrame:

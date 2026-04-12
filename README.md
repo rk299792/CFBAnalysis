@@ -1,13 +1,13 @@
 # CFB Analysis
 
-A Python project exploring SEC college football performance trends from 1950 to 2024.
+A Python project exploring SEC college football performance trends from 1950 to 2025.
 Data is sourced from the [College Football Data API](https://collegefootballdata.com).
 
 ---
 
 ## Analyses & Findings
 
-### 1. SEC Win Percentage Heatmap (1950–2024)
+### 1. SEC Win Percentage Heatmap (1950–2025)
 
 **Script:** `sec_wins_heatmap.py`
 
