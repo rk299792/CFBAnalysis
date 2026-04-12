@@ -10,7 +10,8 @@ Data is sourced from the [College Football Data API](https://collegefootballdata
 ### 1. SEC Win Percentage Heatmap (1950–2024)
 
 **Script:** `sec_wins_heatmap.py`
-**Output:** `output/sec_winpct_heatmap.png`
+
+![SEC Win Percentage Heatmap](output/sec_winpct_heatmap.png)
 
 Visualizes every SEC team's win percentage by season across 75 years. Teams are sorted
 top-to-bottom by their all-time average win percentage in the SEC. Grey cells indicate
@@ -35,7 +36,8 @@ university first admitted Black students.
 ### 2. Pairwise Win% Correlation Matrix
 
 **Script:** `sec_correlation.py`
-**Output:** `output/sec_correlation_heatmap.png`
+
+![SEC Pairwise Correlation Heatmap](output/sec_correlation_heatmap.png)
 
 Computes Spearman rank correlations of win% between every pair of SEC teams,
 restricted to the **10 programs that have been continuous members since 1950**:
@@ -79,7 +81,8 @@ Blue = inverse relationship (one up, the other down).
 ### 3. Desegregation Impact on Win Percentage
 
 **Script:** `sec_deseg_impact.py`
-**Output:** `output/sec_deseg_impact.png`
+
+![SEC Desegregation Impact](output/sec_deseg_impact.png)
 
 For each SEC team, compares the average win percentage in the **10 seasons before**
 versus the **10 seasons after** the university's desegregation. Statistical significance
