@@ -144,8 +144,14 @@ def create_figure(results: pd.DataFrame, df: pd.DataFrame) -> None:
 
     # ── Panel 2: Ole Miss win% time series ────────────────────────────────
     pivot = df.pivot(index="year", columns="team", values="win_pct")
-    om_series = pivot["Ole Miss"].dropna()
     om_deseg  = DESEG_YEARS["Ole Miss"]   # 1962
+
+    # Restrict to exactly the 10-year windows used in the analysis
+    om_series = pivot["Ole Miss"].dropna()
+    om_series = om_series[
+        (om_series.index >= om_deseg - WINDOW) &
+        (om_series.index <  om_deseg + WINDOW)
+    ]
 
     # Rolling 3-year average to smooth noise
     om_roll = om_series.rolling(3, center=True, min_periods=2).mean()
@@ -171,7 +177,7 @@ def create_figure(results: pd.DataFrame, df: pd.DataFrame) -> None:
     ax_ts.text(om_deseg + 0.3, om_row["post_avg"] * 100 + 1.5,
                f"Post avg: {om_row['post_avg']*100:.1f}%", fontsize=8, color="#c0392b")
 
-    ax_ts.set_xlim(om_deseg - WINDOW - 2, om_deseg + WINDOW + 2)
+    ax_ts.set_xlim(om_deseg - WINDOW - 0.5, om_deseg + WINDOW - 0.5)
     ax_ts.set_ylim(0, 105)
     ax_ts.set_xlabel("Season", fontsize=10)
     ax_ts.set_ylabel("Win %", fontsize=10)
