@@ -14,7 +14,7 @@ load_dotenv()
 API_KEY = os.getenv("CFBD_API_KEY")
 BASE_URL = "https://api.collegefootballdata.com"
 CACHE_FILE = Path("data/sec_records.csv")
-OUTPUT_FILE = Path("output/sec_wins_heatmap.png")
+OUTPUT_FILE = Path("output/sec_winpct_heatmap.png")
 
 START_YEAR = 1950
 END_YEAR = 2024
@@ -49,11 +49,18 @@ def fetch_sec_records() -> pd.DataFrame:
 
         if resp.status_code == 200:
             for entry in resp.json():
+                total = entry["total"]
+                games = total["wins"] + total["losses"] + total["ties"]
+                win_pct = round(total["wins"] / games, 4) if games > 0 else None
                 records.append(
                     {
                         "year": year,
                         "team": entry["team"],
-                        "wins": entry["total"]["wins"],
+                        "wins": total["wins"],
+                        "losses": total["losses"],
+                        "ties": total["ties"],
+                        "games": games,
+                        "win_pct": win_pct,
                     }
                 )
         else:
@@ -68,11 +75,11 @@ def fetch_sec_records() -> pd.DataFrame:
 
 
 def create_heatmap(df: pd.DataFrame) -> None:
-    # Pivot: rows = teams, columns = years, values = wins
-    pivot = df.pivot(index="team", columns="year", values="wins")
+    # Pivot: rows = teams, columns = years, values = win percentage
+    pivot = df.pivot(index="team", columns="year", values="win_pct")
 
-    # Sort teams by total wins descending so the strongest programs are at top
-    pivot = pivot.loc[pivot.sum(axis=1, skipna=True).sort_values(ascending=False).index]
+    # Sort teams by average win % descending so the strongest programs are at top
+    pivot = pivot.loc[pivot.mean(axis=1, skipna=True).sort_values(ascending=False).index]
 
     # Mask cells where the team was not in the SEC that season
     mask = pivot.isna()
@@ -83,12 +90,12 @@ def create_heatmap(df: pd.DataFrame) -> None:
         pivot,
         mask=mask,
         cmap="YlOrRd",
-        vmin=0,
-        vmax=13,
+        vmin=0.0,
+        vmax=1.0,
         linewidths=0.2,
         linecolor="#cccccc",
         annot=False,
-        cbar_kws={"label": "Regular Season + Bowl Wins", "shrink": 0.6},
+        cbar_kws={"label": "Win Percentage", "shrink": 0.6, "format": "%.0%%"},
         ax=ax,
     )
 
@@ -109,8 +116,8 @@ def create_heatmap(df: pd.DataFrame) -> None:
 
     ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=10)
     ax.set_title(
-        f"SEC Team Wins by Season ({START_YEAR}–{END_YEAR})\n"
-        "Sorted by all-time SEC wins  |  Grey = not in SEC that season",
+        f"SEC Team Win Percentage by Season ({START_YEAR}–{END_YEAR})\n"
+        "Sorted by average SEC win %  |  Grey = not in SEC that season",
         fontsize=14,
         pad=14,
     )
