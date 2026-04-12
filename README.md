@@ -46,19 +46,33 @@ Blue = inverse relationship (one up, the other down).
 
 #### Key Findings
 
+**Strongest inverse correlations (one team up, other down):**
+
 | Pair | Correlation | Interpretation |
 |---|---|---|
-| Tulane vs Vanderbilt | **+0.780** | Strongest positive — both historically weak; rose and fell together |
-| Tennessee vs Tulane | **+0.623** | Strong positive during overlapping SEC years (1950–1965) |
-| Tennessee vs Texas A&M | **−0.640** | Strongest inverse in the dataset |
-| Florida vs Missouri | **−0.542** | Moderate inverse since Missouri joined in 2012 |
-| Alabama vs Missouri | **−0.480** | Alabama's dominant years coincide with Missouri's weaker ones |
+| Alabama vs Auburn | **−0.368** | Strongest inverse — historic rivals competing for same in-state recruits |
+| Alabama vs Tennessee | **−0.368** | Tied — another fierce recruiting rival; inverse trend across 75 years |
+| Auburn vs Georgia | **−0.280** | Moderate inverse across shared border recruiting territory |
+| LSU vs Mississippi State | **−0.232** | Mild inverse within the SEC West |
+| Florida vs Ole Miss | **−0.181** | Weak inverse |
 
-- **The recruiting competition hypothesis finds limited support** in the data. Most
-  traditional rivals (Alabama–LSU, Alabama–Georgia, Alabama–Auburn) show weak-to-moderate
-  correlations rather than the strong inverse relationship the hypothesis predicts.
-- Correlations involving newer members (Missouri, Texas A&M, Texas, Oklahoma) should be
-  interpreted cautiously due to limited shared seasons (1–13 years).
+**Strongest positive correlations (rise and fall together):**
+
+| Pair | Correlation | Interpretation |
+|---|---|---|
+| Alabama vs Georgia | **+0.223** | Both tend to be strong in the same eras |
+| Auburn vs LSU | **+0.219** | Parallel peaks and valleys over 75 years |
+| Florida vs Tennessee | **+0.160** | Moderate positive |
+
+- **All correlations are weak to moderate** (max |r| = 0.368), suggesting no pair of
+  teams is tightly locked in a zero-sum relationship over the full 75-year span.
+- **The recruiting competition hypothesis finds partial support**: the two strongest
+  inverse correlations (Alabama–Auburn, Alabama–Tennessee) are exactly the traditional
+  rivals who most directly compete for in-state and regional recruits. However, the
+  effect size is modest.
+- Notably, **Alabama–LSU** shows virtually no correlation (r = −0.001), despite being
+  widely considered the premier SEC rivalry of the modern era — suggesting their peaks
+  and valleys are largely independent over the full historical window.
 
 ---
 
