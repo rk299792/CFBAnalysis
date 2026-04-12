@@ -25,9 +25,14 @@ def fetch_sec_records() -> pd.DataFrame:
     Fetch SEC team win records for every season from START_YEAR to END_YEAR.
     Results are cached to CACHE_FILE so the API is only called once.
     """
+    REQUIRED_COLUMNS = {"year", "team", "wins", "losses", "ties", "games", "win_pct"}
     if CACHE_FILE.exists():
-        print(f"Loading cached data from {CACHE_FILE}")
-        return pd.read_csv(CACHE_FILE)
+        cached = pd.read_csv(CACHE_FILE)
+        if REQUIRED_COLUMNS.issubset(cached.columns):
+            print(f"Loading cached data from {CACHE_FILE}")
+            return cached
+        print("Stale cache detected (missing columns) — re-fetching...")
+        CACHE_FILE.unlink()
 
     if not API_KEY or API_KEY == "your_api_key_here":
         raise ValueError("CFBD_API_KEY is not set in your .env file.")
