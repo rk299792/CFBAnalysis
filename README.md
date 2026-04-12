@@ -76,6 +76,13 @@ Blue = inverse relationship (one up, the other down).
   widely considered the premier SEC rivalry of the modern era — suggesting their peaks
   and valleys are largely independent over the full historical window.
 
+#### Rival Time Series: Alabama vs Auburn & Tennessee
+
+The two strongest inverse pairs plotted over time. Shaded area shows which team was
+ahead; faint lines are individual seasons, bold lines are 3-year rolling averages.
+
+![Alabama Rivals Time Series](output/sec_rivals_timeseries.png)
+
 ---
 
 ### 3. Desegregation Impact on Win Percentage
