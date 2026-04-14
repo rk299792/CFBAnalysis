@@ -9,11 +9,10 @@ Fetches all datasets needed for NFL draft round prediction of WRs:
        → overall/3rd-down/passing-down target share
   5. PPA metrics      (2010-2025) — /ppa/players/season?position=WR
        → average & total predicted points added (efficiency)
+  6. NFL Combine      (2010-2025) — nflverse public CSV (1 download)
+       → 40-yard dash, bench press, vertical, broad jump, 3-cone, shuttle
 
-NOTE: 40-yard dash times are NFL Combine data and are not available
-      through the CFBD API. A separate data source would be required.
-
-API calls: ~84 total. All datasets cached; re-runs load from disk.
+API calls: ~84 CFBD + 1 nflverse download. All datasets cached.
 """
 
 import os
@@ -31,8 +30,11 @@ BASE_URL = "https://api.collegefootballdata.com"
 START_YEAR = 2010
 END_YEAR   = 2025
 
+COMBINE_URL    = "https://github.com/nflverse/nflverse-data/releases/download/combine/combine.csv"
+
 STATS_FILE     = Path("data/wr_receiving_stats.csv")
 DRAFT_FILE     = Path("data/wr_draft_picks.csv")
+COMBINE_FILE   = Path("data/wr_combine.csv")
 RECRUITS_FILE  = Path("data/wr_recruits.csv")
 USAGE_FILE     = Path("data/wr_usage.csv")
 PPA_FILE       = Path("data/wr_ppa.csv")
@@ -178,6 +180,52 @@ def fetch_draft_picks() -> pd.DataFrame:
     df = df.sort_values(["draft_year", "overall"]).reset_index(drop=True)
     df.to_csv(DRAFT_FILE, index=False)
     print(f"Saved {len(df)} draft pick rows to {DRAFT_FILE}\n")
+    return df
+
+
+# ── NFL Combine (40-yd dash + all measurables) ────────────────────────────────
+
+def _height_to_inches(h) -> float | None:
+    """Convert '6-2' or '6-02' string to total inches. Returns None if unparseable."""
+    try:
+        parts = str(h).split("-")
+        return int(parts[0]) * 12 + int(parts[1])
+    except Exception:
+        return None
+
+
+def fetch_combine_data() -> pd.DataFrame:
+    """
+    Downloads the nflverse combine CSV (single request) and returns WR rows
+    for START_YEAR–END_YEAR with columns:
+    season, player_name, school, pos, height_in, weight_lbs,
+    forty, bench, vertical, broad_jump, cone, shuttle,
+    draft_round, draft_ovr, draft_team, pfr_id, cfb_id
+    """
+    if COMBINE_FILE.exists():
+        print(f"Loading cached combine data from {COMBINE_FILE}")
+        return pd.read_csv(COMBINE_FILE)
+
+    print(f"Downloading NFL Combine data from nflverse (1 request)...")
+    import io
+    resp = requests.get(COMBINE_URL, timeout=30)
+    resp.raise_for_status()
+
+    df = pd.read_csv(io.StringIO(resp.text))
+
+    # Filter to WRs in our year range
+    df = df[(df["pos"] == "WR") &
+            (df["season"] >= START_YEAR) &
+            (df["season"] <= END_YEAR)].copy()
+
+    # Convert height from "6-2" string to total inches
+    df["height_in"] = df["ht"].apply(_height_to_inches)
+    df = df.rename(columns={"wt": "weight_lbs", "season": "combine_year"})
+    df = df.drop(columns=["ht", "pos"])
+
+    df = df.sort_values(["combine_year", "forty"]).reset_index(drop=True)
+    df.to_csv(COMBINE_FILE, index=False)
+    print(f"Saved {len(df)} WR combine rows to {COMBINE_FILE}\n")
     return df
 
 
@@ -355,7 +403,7 @@ def fetch_ppa_data() -> pd.DataFrame:
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 
-def print_summary(stats_df, draft_df, recruits_df, usage_df, ppa_df) -> None:
+def print_summary(stats_df, draft_df, combine_df, recruits_df, usage_df, ppa_df) -> None:
     print("── Receiving Stats ─────────────────────────────────────────────────")
     print(f"  Seasons : {int(stats_df['year'].min())}–{int(stats_df['year'].max())}")
     print(f"  Rows    : {len(stats_df):,} player-seasons")
@@ -369,6 +417,12 @@ def print_summary(stats_df, draft_df, recruits_df, usage_df, ppa_df) -> None:
     print(f"  Total   : {len(draft_df):,} picks (all positions)")
     print(f"  WR picks: {len(wr):,}")
     print(f"  WR by round:\n{wr['round'].value_counts().sort_index().to_string()}\n")
+
+    print("── NFL Combine ─────────────────────────────────────────────────────")
+    print(f"  Years   : {int(combine_df['combine_year'].min())}–{int(combine_df['combine_year'].max())}")
+    print(f"  Rows    : {len(combine_df):,} WR combine participants")
+    print(f"  Avg 40yd: {combine_df['forty'].mean():.3f}s  |  fastest: {combine_df['forty'].min():.2f}s")
+    print(f"  40yd coverage: {combine_df['forty'].notna().sum():,} of {len(combine_df):,} WRs recorded\n")
 
     print("── Recruiting (physical attributes) ────────────────────────────────")
     hs = recruits_df[recruits_df["recruit_type"] == "HighSchool"]
@@ -391,7 +445,8 @@ def print_summary(stats_df, draft_df, recruits_df, usage_df, ppa_df) -> None:
 if __name__ == "__main__":
     stats_df    = fetch_receiving_stats()
     draft_df    = fetch_draft_picks()
+    combine_df  = fetch_combine_data()
     recruits_df = fetch_recruiting_data()
     usage_df    = fetch_usage_data()
     ppa_df      = fetch_ppa_data()
-    print_summary(stats_df, draft_df, recruits_df, usage_df, ppa_df)
+    print_summary(stats_df, draft_df, combine_df, recruits_df, usage_df, ppa_df)
